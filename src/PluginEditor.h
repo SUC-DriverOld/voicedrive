@@ -51,6 +51,8 @@ private:
     juce::ComboBox presetCombo;     // {84, 163, 70, 16}
     juce::Slider   effectKnob;      // {139, 179, 16, 16}
 
+    juce::Label    valueTip;        // floating value readout while a knob is hovered/dragged
+
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> speedAttachment,
         jitterAttachment, shimmerAttachment, harmonicsAttachment,

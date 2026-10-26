@@ -102,13 +102,30 @@ VoiceDriveAudioProcessorEditor::VoiceDriveAudioProcessorEditor (VoiceDriveAudioP
     addAndMakeVisible (presetCombo);
 
     using P = juce::AudioProcessorValueTreeState;
+    // UI knob ranges (original): Speed/Jitter/Shimmer/NI-Harmonics/Effect 0..1;
+    // "Formant Shift" = Shift Rate (host param 22, range -1..1: presets use
+    // -0.2/-0.3/-1.0). ShiftLevel (param 18) is an engine-level control kept at 1.0.
     waveformAttachment  = std::make_unique<P::ComboBoxAttachment> (processor.apvts, "oscWaveform", waveformCombo);
     speedAttachment     = std::make_unique<P::SliderAttachment> (processor.apvts, "oscSpeed", speedKnob);
     jitterAttachment    = std::make_unique<P::SliderAttachment> (processor.apvts, "jitter", jitterKnob);
     shimmerAttachment   = std::make_unique<P::SliderAttachment> (processor.apvts, "shimmer", shimmerKnob);
     harmonicsAttachment = std::make_unique<P::SliderAttachment> (processor.apvts, "bstLevel", harmonicsKnob);
-    formantAttachment   = std::make_unique<P::SliderAttachment> (processor.apvts, "shiftLevel", formantKnob);
+    formantAttachment   = std::make_unique<P::SliderAttachment> (processor.apvts, "shiftRate", formantKnob);
     effectAttachment    = std::make_unique<P::SliderAttachment> (processor.apvts, "effectLevel", effectKnob);
+
+    // jitter: the host param is linear (measured on the original: norm 0.5 -> raw
+    // 0.50000), but the original's KNOB has a log-style taper with 3-decimal steps.
+    // Re-skin only the slider (value units stay identical, attachment unaffected).
+    jitterKnob.setNormalisableRange ({ 0.0, 1.0, 0.001, 1.0 / 3.0 });   // midpoint = 0.125
+
+    // floating value tooltip (shown while a knob is dragged / hovered)
+    valueTip.setJustificationType (juce::Justification::centred);
+    valueTip.setColour (juce::Label::backgroundColourId, juce::Colour (0xFF232323));
+    valueTip.setColour (juce::Label::textColourId,      juce::Colours::white);
+    valueTip.setColour (juce::Label::outlineColourId,   juce::Colour (0xFF787878));
+    valueTip.setInterceptsMouseClicks (false, false);
+    addAndMakeVisible (valueTip);
+    valueTip.setVisible (false);
 
     // widget names = row labels, painted by the editor itself (as in the original)
     waveformCombo.setName ("Waveform");
@@ -185,10 +202,35 @@ void VoiceDriveAudioProcessorEditor::timerCallback()
 {
     // sync preset combo with the "Preset No" parameter (>200 ms cadence in the original)
     auto now = juce::Time::getMillisecondCounter();
-    if (now - lastComboSync < 200)
-        return;
-    lastComboSync = now;
-    syncPresetCombo();
+    if (now - lastComboSync >= 200)
+    {
+        lastComboSync = now;
+        syncPresetCombo();
+    }
+
+    // floating value tooltip: while a knob is hovered or dragged, show its value
+    struct Tip { juce::Slider* s; int decimals; };
+    const Tip tips[] = { { &speedKnob,     2 },
+                         { &jitterKnob,    3 },   // original shows 3 decimals here
+                         { &shimmerKnob,   2 },
+                         { &harmonicsKnob, 2 },
+                         { &formantKnob,   2 },
+                         { &effectKnob,    2 } };
+    for (auto& t : tips)
+    {
+        if (t.s->isMouseOverOrDragging())
+        {
+            valueTip.setText (juce::String (t.s->getValue(), t.decimals), juce::dontSendNotification);
+            auto b = t.s->getBounds();
+            auto tipBounds = juce::Rectangle<int> (b.getCentreX() - 24, b.getY() - 20, 48, 16);
+            valueTip.setBounds (tipBounds.constrainedWithin (getLocalBounds()));
+            valueTip.setFont (juce::FontOptions { 9.0f * uiScale });
+            valueTip.setVisible (true);
+            valueTip.toFront (false);
+            return;
+        }
+    }
+    valueTip.setVisible (false);
 }
 
 //==============================================================================

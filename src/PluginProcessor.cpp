@@ -80,16 +80,16 @@ VoiceDriveAudioProcessor::createParameterLayout()
     // #3 OSC Speed (UI knob)
     floatParam ("oscSpeed", "OSC Speed", 0.0f, 1.0f, 0.01f, 0.5f, true,
                 [] (float v) { return juce::String (v, 2); });
-    // #4..#26 engine ("NonAuto") parameters
+    // #4..#26 engine ("NonAuto") parameters -- except the four that carry UI knobs
     floatParam ("oscNoiseRatio", "OSC Noise Ratio", 0.0f, 1.0f, 0.01f, 0.3f);
-    floatParam ("jitter", "Jitter", 0.0f, 1.0f, 0.001f, 0.025f);
-    floatParam ("shimmer", "Shimmer", 0.0f, 1.0f, 0.01f, 0.4f);
+    floatParam ("jitter", "Jitter", 0.0f, 1.0f, 0.001f, 0.025f, true);      // UI knob -> automatable
+    floatParam ("shimmer", "Shimmer", 0.0f, 1.0f, 0.01f, 0.4f, true);       // UI knob -> automatable
     floatParam ("shimmerFreq1", "Shimmer Freq1", 0.0f, 22050.0f, 0.01f, 2000.0f);
     floatParam ("shimmerFreq2", "Shimmer Freq2", 0.0f, 22050.0f, 0.01f, 7000.0f);
     intParam   ("f0EstType", "F0 Est Type", 1, 100, 3);
     floatParam ("f0EstRgeMin", "F0 Est Rge Min", 0.0f, 1000.0f, 0.01f, 40.0f);
     floatParam ("f0EstRgeMax", "F0 Est Rge Max", 0.0f, 1000.0f, 0.01f, 1000.0f);
-    floatParam ("bstLevel", "Bst Level", 0.0f, 1.0f, 0.01f, 0.4f);
+    floatParam ("bstLevel", "Bst Level", 0.0f, 1.0f, 0.01f, 0.4f, true);    // UI knob -> automatable
     intParam   ("bstAlgo", "Bst Algo", 1, 1000, 3);
     floatParam ("bstRgeTopMin", "Bst Rge Top Min", 0.0f, 22050.0f, 0.01f, 4000.0f);
     floatParam ("bstRgeTopMax", "Bst Rge Top Max", 0.0f, 22050.0f, 0.01f, 22050.0f);
@@ -101,7 +101,7 @@ VoiceDriveAudioProcessor::createParameterLayout()
     intParam   ("shiftStyle", "Shift Style", 1, 1000, 4);
     // NOTE: original stored raw negative values via its NonAuto setter, so the
     // rewrite widens the range to -1..1 to keep the presets faithful.
-    floatParam ("shiftRate", "Shift Rate", -1.0f, 1.0f, 0.01f, 1.0f);
+    floatParam ("shiftRate", "Shift Rate", -1.0f, 1.0f, 0.01f, 0.0f, true); // UI knob -> automatable
     floatParam ("shiftMixLevel", "Shift Mix Level", 0.0f, 1.0f, 0.01f, 1.0f);
     floatParam ("addGain", "Add Gain", 0.0f, 20.0f, 0.01f, 0.0f);
     floatParam ("lagOrder", "Lag Order", 0.0f, 1.1337868f, 0.00002f, 0.11337868f);
